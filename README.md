@@ -26,9 +26,11 @@ Java 网络编程简史
 
 BIO 面向流（Stream）编程，在 NIO 中是面向缓冲区（Buffer）的。
 除了 boolean 类型，其余所有 Java 基本数据类型都对应着一个缓冲区，ByteBuffer，IntBuffer，LongBuffer等。
+
 【Channel】
 
 网络数据通过 Channel 通道进行读取和写入，读取和写入操作可以同时进行，也就是说 Channel 是全双工的。这一点与流不同，流是单向的（输入流、输出流）。
+
 【Selector】
 
 在《Netty权威指南》（李林峰著）一书中，作者将其称为“多路复用器”，这是因为一条 Reactor 线程会初始化 Selector，对所有注册在 Selector 上的 Channel 进行轮询，并通过 SelectionKey 能获取所有就绪的 Channel 集合，于是一条线程即可接入大量的客户端，因此将其称之为“多路复用器”。
@@ -54,9 +56,17 @@ NIO 客户端开发流程：
 3. 连接服务器（返回boolean）；
 4. 判断是否连接成功，如果注册成功则向 Channel 注册 OP_READ，否则注册 OP_CONNECT；
 5. 创建 Reactor 线程和 Selector，启动线程；
-6. 在 run() 方法中轮询已经就绪的 key，判断 key 是否完成连接；
-7. 完成连接后注册 OP_READ 事件到 Selector 上；
-8. 通道异步读取数据到缓冲区
+6. 判断 channel 是否连接成功，如果连接成功，注册 OP_READ 事件到 Selector 上，并写出（write）消息；否则注册 OP_CONNECT；
+7. 在 run() 方法中轮询已经就绪的 key，判断 key 处于可读状态，若可读，则读取数据到 ByteBuffer 进行处理；
+8. 结束后释放资源（Selector）。
+
+使用 NIO 非阻塞模式开发，还需要注意“写半包”问题，因为异步的操作不能保证一次性将所有数据发送完毕。
+由此可见 NIO 编程的复杂性相较于传统 IO 来说，增加了很多。
+
+NIO 2.0
+
+
+
 
 
 
