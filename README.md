@@ -21,17 +21,22 @@ Java 网络编程简史
 
 在 BIO 的套接字（socket）编程中，有两个产生 socket 的类，它们分别是 “Socket” 和 “ServerSocket”，
 在 NIO 中，提供了 “SocketChannel” 和 “ServerSocketChannel” 两种不同的套接字实现。这两种通道同时支持阻塞和非阻塞模式。
+
 【Buffer】
+
 BIO 面向流（Stream）编程，在 NIO 中是面向缓冲区（Buffer）的。
 除了 boolean 类型，其余所有 Java 基本数据类型都对应着一个缓冲区，ByteBuffer，IntBuffer，LongBuffer等。
 【Channel】
+
 网络数据通过 Channel 通道进行读取和写入，读取和写入操作可以同时进行，也就是说 Channel 是全双工的。这一点与流不同，流是单向的（输入流、输出流）。
 【Selector】
+
 在《Netty权威指南》（李林峰著）一书中，作者将其称为“多路复用器”，这是因为一条 Reactor 线程会初始化 Selector，对所有注册在 Selector 上的 Channel 进行轮询，并通过 SelectionKey 能获取所有就绪的 Channel 集合，于是一条线程即可接入大量的客户端，因此将其称之为“多路复用器”。
 
 NIO 服务端开发流程：
+
 1. 打开 ServerSocketChannel 管道，它是所有客户端连接的父管道；
-2. 绑定监听端口，设置连接为非阻塞模式（还有其他若干设置）；
+2. 绑定监听端口，设置连接为非阻塞模式（configureBlocking）及还有其他若干设置；
 3. 创建 Reactor 线程，初始化 Selector，启动线程；
 4. 将 ServerSocketChannel 注册到 Selector 上，并监听 OP_ACCEPT 事件；
 5. 轮询 SelectionKey；
@@ -44,7 +49,14 @@ NIO 服务端开发流程：
 
 NIO 客户端开发流程：
 
-
+1. 打开 SocketChannel 管道；
+2. 绑定客户端地址，设置连接为非阻塞模式和 TCP 连接参数；
+3. 连接服务器（返回boolean）；
+4. 判断是否连接成功，如果注册成功则向 Channel 注册 OP_READ，否则注册 OP_CONNECT；
+5. 创建 Reactor 线程和 Selector，启动线程；
+6. 在 run() 方法中轮询已经就绪的 key，判断 key 是否完成连接；
+7. 完成连接后注册 OP_READ 事件到 Selector 上；
+8. 通道异步读取数据到缓冲区
 
 
 
